@@ -19,6 +19,7 @@
 #import "ZXCGImageLuminanceSource.h"
 #import "ZXImage.h"
 #import "ZXDecodeHints.h"
+#import "ZXCGImageLuminanceSourceContext.h"
 
 @interface ZXCGImageLuminanceSource ()
 
@@ -218,7 +219,9 @@
   uint32_t *pixelData = CGBitmapContextGetData(context);
 
   _data = (int8_t *)malloc(selfWidth * selfHeight * sizeof(int8_t));
-
+    
+    [[ZXCGImageLuminanceSourceContext context] setWidth: selfWidth height: selfHeight];
+    
   dispatch_apply(selfHeight, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^(size_t idx) {
     size_t stripe_start = idx * selfWidth;
     size_t stripe_stop = stripe_start + selfWidth;
@@ -262,14 +265,16 @@
   });
 
   CGContextRelease(context);
+    NSLog(@"======> Value of this is: %d", [[ZXCGImageLuminanceSourceContext context] illuminationType]);
 
   _top = top;
   _left = left;
 }
 
 - (uint32_t)calculateRed:(uint32_t)red green:(uint32_t)green blue:(uint32_t)blue {
-    // Normal formula
-    if (_sourceInfo == nil || _sourceInfo.type == ZXCGImageLuminanceSourceNormal) {
+    [[ZXCGImageLuminanceSourceContext context] updateRed: red green: green blue: blue];
+    
+    if (!_sourceInfo || _sourceInfo.type == ZXCGImageLuminanceSourceNormal) {
         uint32_t ret = (306 * red + 601 * green + 117 * blue + (0x200)) >> 10; // 0x200 = 1<<9, half an lsb of the result to force rounding
         return ret;
     }
