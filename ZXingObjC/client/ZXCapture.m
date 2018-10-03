@@ -614,12 +614,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (void)decodeQRFromCGImage: (CGImageRef)image {
-    // Work on darker grayscale or normal
     CGImageRef clonedImage = [self createScaleImage: image scale: 1.0];
-    
     ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: image
                                                                               sourceInfo: nil];
-    
     ZXCGImageLuminanceSourceInfo *info = [[ZXCGImageLuminanceSourceInfo alloc] initWithDecomposingMin];
     ZXCGImageLuminanceSource *darkestSource = [[ZXCGImageLuminanceSource alloc] initWithCGImage: clonedImage
                                                                                     sourceInfo: info];
