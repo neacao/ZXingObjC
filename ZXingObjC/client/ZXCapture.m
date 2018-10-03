@@ -42,7 +42,6 @@
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, strong) AVCaptureSession *session;
 
-@property (nonatomic, assign) BOOL heuristic;
 @property (nonatomic, assign) BOOL qrOptimzed;
 @property (nonatomic, copy) dispatch_queue_t metadataOutputQueue;
 @property (nonatomic, copy) dispatch_queue_t parallelQueue;
@@ -622,7 +621,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                                                                               sourceInfo: nil];
     
     ZXCGImageLuminanceSourceInfo *info = [[ZXCGImageLuminanceSourceInfo alloc] initWithDecomposingMin];
-    ZXCGImageLuminanceSource *darkerSource = [[ZXCGImageLuminanceSource alloc] initWithCGImage: clonedImage
+    ZXCGImageLuminanceSource *darkestSource = [[ZXCGImageLuminanceSource alloc] initWithCGImage: clonedImage
                                                                                     sourceInfo: info];
     CGImageRelease(image);
     CGImageRelease(clonedImage);
@@ -631,7 +630,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         [self decodQRFromSource: source origin: TRUE];
     });
     dispatch_async(_parallelQueue, ^{
-        [self decodQRFromSource: darkerSource origin: FALSE];
+        [self decodQRFromSource: darkestSource origin: FALSE];
     });
 }
 
