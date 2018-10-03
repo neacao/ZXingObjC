@@ -65,3 +65,13 @@
 - (void)optimiseForQROnly;
 
 @end
+
+@interface ZXCapture (Helper)
+
+- (void)applyOrientation: (NSInteger)orientation
+          sourceViewRect: (CGRect)sourceViewRect
+            scanViewRect: (CGRect)scanViewRect;
+
+@end
+
+

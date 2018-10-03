@@ -59,11 +59,8 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-  [super viewWillAppear:animated];
-
-  self.capture.delegate = self;
-
-  [self applyOrientation];
+    [super viewWillAppear:animated];
+    self.capture.delegate = self;
 }
 
 - (void)viewDidLayoutSubviews {
@@ -79,78 +76,17 @@
 	[coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
 	} completion:^(id<UIViewControllerTransitionCoordinatorContext> context)
 	{
-		[self applyOrientation];
+        [self applyOrientation];
 	}];
 }
 
-#pragma mark - Private
 - (void)applyOrientation {
-	UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
-	float scanRectRotation;
-	float captureRotation;
-
-	switch (orientation) {
-		case UIInterfaceOrientationPortrait:
-			captureRotation = 0;
-			scanRectRotation = 90;
-			break;
-		case UIInterfaceOrientationLandscapeLeft:
-			captureRotation = 90;
-			scanRectRotation = 180;
-			break;
-		case UIInterfaceOrientationLandscapeRight:
-			captureRotation = 270;
-			scanRectRotation = 0;
-			break;
-		case UIInterfaceOrientationPortraitUpsideDown:
-			captureRotation = 180;
-			scanRectRotation = 270;
-			break;
-		default:
-			captureRotation = 0;
-			scanRectRotation = 90;
-			break;
-	}
-	[self applyRectOfInterest:orientation];
-	CGAffineTransform transform = CGAffineTransformMakeRotation((CGFloat) (captureRotation / 180 * M_PI));
-	[self.capture setTransform:transform];
-	[self.capture setRotation:scanRectRotation];
-	self.capture.layer.frame = self.view.frame;
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    [self.capture applyOrientation: orientation
+                    sourceViewRect: self.view.frame
+                      scanViewRect: self.scanRectView.frame];
+    self.capture.layer.frame = self.view.frame;
 }
-
-- (void)applyRectOfInterest:(UIInterfaceOrientation)orientation {
-	CGFloat scaleVideoX, scaleVideoY;
-	CGFloat videoSizeX, videoSizeY;
-	CGRect transformedVideoRect = self.scanRectView.frame;
-	if([self.capture.sessionPreset isEqualToString:AVCaptureSessionPreset1920x1080]) {
-		videoSizeX = 1080;
-		videoSizeY = 1920;
-	} else {
-		videoSizeX = 720;
-		videoSizeY = 1280;
-	}
-	if(UIInterfaceOrientationIsPortrait(orientation)) {
-		scaleVideoX = self.view.frame.size.width / videoSizeX;
-		scaleVideoY = self.view.frame.size.height / videoSizeY;
-		
-        // Convert CGPoint under portrait mode to map with orientation of image
-        // because the image will be cropped before rotate
-        // reference: https://github.com/TheLevelUp/ZXingObjC/issues/222
-        CGFloat realX = transformedVideoRect.origin.y;
-        CGFloat realY = self.view.frame.size.width - transformedVideoRect.size.width - transformedVideoRect.origin.x;
-        CGFloat realWidth = transformedVideoRect.size.height;
-        CGFloat realHeight = transformedVideoRect.size.width;
-        transformedVideoRect = CGRectMake(realX, realY, realWidth, realHeight);
-        
-	} else {
-		scaleVideoX = self.view.frame.size.width / videoSizeY;
-		scaleVideoY = self.view.frame.size.height / videoSizeX;
-	}
-    
-	_captureSizeTransform = CGAffineTransformMakeScale(1.0/scaleVideoX, 1.0/scaleVideoY);
-	self.capture.scanRect = CGRectApplyAffineTransform(transformedVideoRect, _captureSizeTransform);
-}
-
 #pragma mark - Private Methods
 
 - (NSString *)barcodeFormatToString:(ZXBarcodeFormat)format {
