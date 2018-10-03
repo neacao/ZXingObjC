@@ -615,18 +615,27 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (void)optimiseDecodeQRFromCGImage: (CGImageRef)image {
-    ZXCGImageLuminanceSourceInfo *sourceInfo;
-    dispatch_async(_parallelQueue, ^{
-        [self decodQRFromCGImage: image sourceInfo: sourceInfo origin: TRUE];
-    });
+    // Work on darker grayscale or normal
+    CGImageRef clonedImage = [self createScaleImage: image scale: 1.0];
     
+    ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: image
+                                                                              sourceInfo: nil];
+    
+    ZXCGImageLuminanceSourceInfo *info = [[ZXCGImageLuminanceSourceInfo alloc] initWithDecomposingMin];
+    ZXCGImageLuminanceSource *darkerSource = [[ZXCGImageLuminanceSource alloc] initWithCGImage: clonedImage
+                                                                                    sourceInfo: info];
+    
+    dispatch_async(_parallelQueue, ^{
+        [self decodQRFromCGImage: image source: source origin: TRUE];
+    });
+    dispatch_async(_parallelQueue, ^{
+        [self decodQRFromCGImage: image source: darkerSource origin: FALSE];
+    });
 }
 
 - (void)decodQRFromCGImage: (CGImageRef)image
-                sourceInfo: (ZXCGImageLuminanceSourceInfo *)sourceInfo
+                    source: (ZXCGImageLuminanceSource *)source
                     origin: (BOOL)origin {
-    ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: image
-                                                                              sourceInfo: sourceInfo];
     ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
     ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
     

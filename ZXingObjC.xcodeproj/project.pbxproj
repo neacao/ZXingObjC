@@ -1720,6 +1720,9 @@
 		79983A482164756100E311F8 /* ZXQRCodeBlackBox7TestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A442164755400E311F8 /* ZXQRCodeBlackBox7TestCase.m */; };
 		79983A5B2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; };
 		79983A5C2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
+		90B4CE762165087F00A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
+		90B4CE772165088400A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
+		90B4CE782165088500A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
 		DB7257521A52420400EFF81B /* ZXAztecDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 25403CEF166A999D00E13304 /* ZXAztecDecoder.m */; };
 		DB7257531A52420400EFF81B /* ZXAztecWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2519AB3317FD1EC000A71C45 /* ZXAztecWriter.m */; };
 		DB7257541A52420400EFF81B /* ZXAztecDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = 25403CF2166A999D00E13304 /* ZXAztecDetector.m */; };
@@ -6025,6 +6028,7 @@
 				254041D5166AAE6000E13304 /* ZXMaxiCodeDecodedBitStreamParser.m in Sources */,
 				254041D6166AAE6000E13304 /* ZXMaxiCodeDecoder.m in Sources */,
 				254041D7166AAE6000E13304 /* ZXMaxiCodeReader.m in Sources */,
+				90B4CE782165088500A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */,
 				024D311319104B77008C0C89 /* ZXByteMatrix.m in Sources */,
 				25389B6D17FFC98100772392 /* ZXPDF417DetectionResultColumn.m in Sources */,
 				0294D130190ED90B00BBACCB /* ZXLuminanceSource.m in Sources */,
@@ -6403,6 +6407,7 @@
 				2540468F166ABBED00E13304 /* ZXMaxiCodeDecoder.m in Sources */,
 				2519AB7317FE60E700A71C45 /* ZXPDF417BoundingBox.m in Sources */,
 				25404690166ABBED00E13304 /* ZXMaxiCodeReader.m in Sources */,
+				90B4CE762165087F00A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */,
 				024D311419104B77008C0C89 /* ZXByteMatrix.m in Sources */,
 				0294D131190ED90B00BBACCB /* ZXLuminanceSource.m in Sources */,
 				0218B85A18D230CC0005E7EC /* ZXAztecBinaryShiftToken.m in Sources */,
@@ -6634,6 +6639,7 @@
 				DB7257A71A52420400EFF81B /* ZXMaxiCodeDecoder.m in Sources */,
 				DB7257A81A52420400EFF81B /* ZXMaxiCodeReader.m in Sources */,
 				DB7257A91A52420400EFF81B /* ZXPDF417DetectionResultColumn.m in Sources */,
+				90B4CE772165088400A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */,
 				DB7257AA1A52420400EFF81B /* ZXByteMatrix.m in Sources */,
 				DB7257AB1A52420400EFF81B /* ZXLuminanceSource.m in Sources */,
 				DB7257AC1A52420400EFF81B /* ZXAztecBinaryShiftToken.m in Sources */,
