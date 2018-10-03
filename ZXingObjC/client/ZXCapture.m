@@ -25,6 +25,8 @@
 #import "ZXResult.h"
 #import "ZXQRCodeReader.h"
 
+#define DEBUG_MODE 0
+
 @interface ZXCapture () <AVCaptureMetadataOutputObjectsDelegate>
 
 @property (nonatomic, strong) CALayer *binaryLayer;
@@ -633,20 +635,22 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)decodQRFromSource: (ZXCGImageLuminanceSource *)source
                     origin: (BOOL)origin {
+    
     ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
     ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
+    ZXDecodeHints *hints = [ZXDecodeHints hints];
+    [hints addPossibleFormat: kBarcodeFormatQRCode];
+    [hints setTryHarder: TRUE];
     
-    if (origin && self.binaryLayer) {
+    if (origin) {
+#if DEBUG_MODE
         CGImageRef image = [binarizer createImage];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
             self.binaryLayer.contents = (__bridge id)image;
             CGImageRelease(image);
         });
+#endif
     }
-    
-    ZXDecodeHints *hints = [ZXDecodeHints hints];
-    [hints addPossibleFormat: kBarcodeFormatQRCode];
-    [hints setTryHarder: TRUE];
     
     NSError *error;
     ZXQRCodeReader *reader = [[ZXQRCodeReader alloc] init];
