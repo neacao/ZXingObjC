@@ -62,6 +62,6 @@
 - (void)start;
 - (void)stop;
 
-- (void)enableHeuristic;
+- (void)optimiseForQROnly;
 
 @end

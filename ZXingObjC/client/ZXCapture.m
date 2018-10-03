@@ -23,8 +23,9 @@
 #import "ZXHybridBinarizer.h"
 #import "ZXReader.h"
 #import "ZXResult.h"
+#import "ZXQRCodeReader.h"
 
-@interface ZXCapture ()
+@interface ZXCapture () <AVCaptureMetadataOutputObjectsDelegate>
 
 @property (nonatomic, strong) CALayer *binaryLayer;
 @property (nonatomic, assign) BOOL cameraIsReady;
@@ -42,7 +43,10 @@
 @property (nonatomic, strong) AVCaptureSession *session;
 
 @property (nonatomic, assign) BOOL heuristic;
+@property (nonatomic, assign) BOOL qrOptimzed;
+@property (nonatomic, copy) dispatch_queue_t metadataOutputQueue;
 @property (nonatomic, copy) dispatch_queue_t parallelQueue;
+@property (nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
 @end
 
 @implementation ZXCapture
@@ -192,13 +196,6 @@
   _transform = transform;
   [self.layer setAffineTransform:transform];
 }
-
-- (void)enableHeuristic {
-    if (_heuristic) { return; }
-    _heuristic = TRUE;
-    _parallelQueue = dispatch_queue_create("com.zxing.parallelQueue", DISPATCH_QUEUE_CONCURRENT);
-}
-
 
 #pragma mark - Back, Front, Torch
 
@@ -399,8 +396,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         self.captureToFilename = nil;
     }
     
-    if (_heuristic) {
-        [self decodeImageAdv: rotatedImage];
+    if (_qrOptimzed) {
+        [self optimiseDecodeQRFromCGImage: rotatedImage];
+        return;
     }
     
     ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: rotatedImage];
@@ -438,30 +436,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
             }
         }
     }
-}
-
-
-/**
- This function try to make the scalegray image darker to process
- */
-- (void)decodeImageAdv: (CGImageRef)cgImage {
-    CGImageRef img = CGImageCreateCopy(cgImage);
-    dispatch_async(_parallelQueue, ^{
-        ZXCGImageLuminanceSourceInfo *sourceInfo = [[ZXCGImageLuminanceSourceInfo alloc] initWithDecomposingMin];
-        ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: img
-                                            sourceInfo: sourceInfo];
-        CGImageRelease(img);
-        
-        ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
-        ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
-        NSError *error;
-        ZXResult *result = [self.reader decode:bitmap hints: self.hints error:&error];
-        if (result && [self.delegate respondsToSelector: @selector(captureResult:result:)]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate captureResult:self result:result];
-            });
-        }
-    });
 }
 
 #pragma mark - Private
@@ -600,6 +574,116 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if (self.running && !self.delegate && !self.onScreen) {
     [self stop];
   }
+}
+
+# pragma mark - Customization
+
+- (void)optimiseForQROnly {
+    if (_qrOptimzed) { return; }
+    _qrOptimzed = TRUE;
+    
+    _metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+    [self.session addOutput: _metadataOutput];
+    _metadataOutputQueue = dispatch_queue_create("com.neacao.metadataOutputQueue", DISPATCH_QUEUE_SERIAL);
+    [_metadataOutput setMetadataObjectTypes: @[AVMetadataObjectTypeQRCode]];
+    [_metadataOutput setMetadataObjectsDelegate: self queue: _metadataOutputQueue];
+    
+    _parallelQueue = dispatch_queue_create("com.neacao.parallelQueue", DISPATCH_QUEUE_CONCURRENT);
+}
+
+- (CGImageRef)createScaleImage: (CGImageRef)image scale: (CGFloat)scale {
+    size_t width = CGImageGetWidth(image);
+    size_t height = CGImageGetHeight(image);
+    size_t targetWidth = width * scale;
+    size_t targetHeight = height * scale;
+    size_t bitsPerComponent = CGImageGetBitsPerComponent(image);
+    size_t bytesPerRow = CGImageGetBytesPerRow(image) * scale;
+    CGColorSpaceRef colorSpace = CGImageGetColorSpace(image);
+    CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(image);
+    
+    CGContextRef context = CGBitmapContextCreate(nil, targetWidth, targetHeight, bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo);
+    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+    CGContextDrawImage(context, CGRectMake(0, 0, targetWidth, targetHeight), image);
+    CGImageRef scaledImage = CGBitmapContextCreateImage(context);
+    CGColorSpaceRelease(colorSpace);
+    CGContextRelease(context);
+    return scaledImage;
+}
+
+- (void)optimiseDecodeQRFromCGImage: (CGImageRef)image {
+    static int __type = 0;
+    __type = (__type + 1) % 3;
+    CGImageRef smallImage = [self createScaleImage: image scale: 0.5];
+    CGImageRef largeImage = [self createScaleImage: image scale: 2.0];
+    
+    ZXCGImageLuminanceSourceInfo *sourceInfo;
+    if (__type == 0) {
+        sourceInfo = [[ZXCGImageLuminanceSourceInfo alloc] initWithDecomposingMin];
+    } else if (__type == 1) {
+        sourceInfo = [[ZXCGImageLuminanceSourceInfo alloc] initWithNormal];
+    } else if (__type == 2) {
+        sourceInfo = [[ZXCGImageLuminanceSourceInfo alloc] initWithShades: 16];
+    }
+    
+    dispatch_async(_parallelQueue, ^{
+        [self decodQRFromCGImage: smallImage sourceInfo: sourceInfo];
+    });
+    dispatch_async(_parallelQueue, ^{
+        [self decodQRFromCGImage: largeImage sourceInfo: sourceInfo];
+    });
+    dispatch_async(_parallelQueue, ^{
+        [self decodQRFromCGImage: image sourceInfo: sourceInfo];
+    });
+}
+
+- (void)decodQRFromCGImage: (CGImageRef)image
+                sourceInfo: (ZXCGImageLuminanceSourceInfo *)sourceInfo {
+    
+    ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: image
+                                                                              sourceInfo: sourceInfo];
+    ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
+    ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
+    
+    ZXDecodeHints *hints = [ZXDecodeHints hints];
+    [hints addPossibleFormat: kBarcodeFormatQRCode];
+    [hints setTryHarder: TRUE];
+    
+    NSError *error;
+    ZXQRCodeReader *reader = [[ZXQRCodeReader alloc] init];
+    ZXResult *result = [reader decode:bitmap hints:hints error:&error];
+    if (result && [self.delegate respondsToSelector: @selector(captureResult:result:)]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate captureResult:self result:result];
+        });
+    }
+    CGImageRelease(image);
+}
+
+# pragma mark - AVCaptureMetadataOutputObjectsDelegate
+
+- (void)captureOutput:(AVCaptureOutput *)output
+didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
+       fromConnection:(AVCaptureConnection *)connection {
+    
+    if ( [metadataObjects count] == 0 ) return;
+
+    if (! [metadataObjects.firstObject isKindOfClass: [AVMetadataMachineReadableCodeObject class]] ) return;
+
+    AVMetadataMachineReadableCodeObject *object = metadataObjects.firstObject;
+
+    if (object.type == AVMetadataObjectTypeQRCode
+        && object.stringValue
+        && [self.delegate respondsToSelector: @selector(captureResult:result:)]) {
+        
+        ZXResult *result = [[ZXResult alloc] initWithText: object.stringValue
+                                                 rawBytes: nil
+                                             resultPoints: nil
+                                                   format: kBarcodeFormatQRCode];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate captureResult: self result: result];
+        });
+    }
 }
 
 @end
