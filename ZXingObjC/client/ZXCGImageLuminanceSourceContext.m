@@ -36,7 +36,7 @@ static const float alignLuminance = 150;
     @synchronized(self) {
         if (shared == nil) {
             shared = [[self alloc] init];
-            [shared reset];
+            [shared custom];
         }
     }
     return shared;
@@ -46,11 +46,6 @@ static const float alignLuminance = 150;
     _updateQueue = dispatch_queue_create("com.zxing.updateQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-- (void)reset {
-    _height = 0;
-    _width = 0;
-    _brightPixel = 0;
-}
 
 - (void)setWidth:(float)width height:(float)height {
     _brightPixel = 0;
@@ -59,15 +54,16 @@ static const float alignLuminance = 150;
 }
 
 - (void)updateRed: (uint32_t)red green: (uint32_t)green blue: (uint32_t)blue {
-    float luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
-    if (luminance >= alignLuminance) {
-        self.brightPixel++;
-    }
+    dispatch_async(_updateQueue, ^{
+        float luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
+        if (luminance >= alignLuminance) {
+            self.brightPixel++;
+        }
+    });
 }
 
 - (ZXCGImageIlluminationType)illuminationType {
     uint32_t brightPixelThreshold = _width * _height * brightThresholdPercent;
-    NSLog(@"Compare %d %d", _brightPixel, brightPixelThreshold);
 
     if (_brightPixel >= brightPixelThreshold) {
         return ZXCGImageIlluminationBrighter;

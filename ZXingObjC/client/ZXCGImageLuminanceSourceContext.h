@@ -28,8 +28,6 @@ typedef enum {
 
 - (void)updateRed: (uint32_t)red green: (uint32_t)green blue: (uint32_t)blue;
 
-- (void)reset;
-
 - (ZXCGImageIlluminationType)illuminationType;
 
 @end
