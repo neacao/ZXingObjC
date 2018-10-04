@@ -87,6 +87,7 @@
                       scanViewRect: self.scanRectView.frame];
     self.capture.layer.frame = self.view.frame;
 }
+
 #pragma mark - Private Methods
 
 - (NSString *)barcodeFormatToString:(ZXBarcodeFormat)format {

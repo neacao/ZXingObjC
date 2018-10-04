@@ -1715,10 +1715,13 @@
 		7967E68D21646DC300C28E42 /* ZXCGImageLuminanceSourceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7967E67D2163B98C00C28E42 /* ZXCGImageLuminanceSourceInfo.m */; };
 		7967E68E21646DCA00C28E42 /* ZXCGImageLuminanceSourceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 7967E67C2163B98C00C28E42 /* ZXCGImageLuminanceSourceInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7967E68F21646DCB00C28E42 /* ZXCGImageLuminanceSourceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 7967E67C2163B98C00C28E42 /* ZXCGImageLuminanceSourceInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		7967E69021646DCB00C28E42 /* ZXCGImageLuminanceSourceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 7967E67C2163B98C00C28E42 /* ZXCGImageLuminanceSourceInfo.h */; };
+		7967E69021646DCB00C28E42 /* ZXCGImageLuminanceSourceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 7967E67C2163B98C00C28E42 /* ZXCGImageLuminanceSourceInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		79738EC32165FD98000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; };
+		79738EC42165FD99000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		79738EC52165FD99000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; };
 		79983A472164756000E311F8 /* ZXQRCodeBlackBox7TestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A442164755400E311F8 /* ZXQRCodeBlackBox7TestCase.m */; };
 		79983A482164756100E311F8 /* ZXQRCodeBlackBox7TestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A442164755400E311F8 /* ZXQRCodeBlackBox7TestCase.m */; };
-		79983A5B2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; };
+		79983A5B2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 79983A592164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		79983A5C2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
 		90B4CE762165087F00A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
 		90B4CE772165088400A4B6CC /* ZXCGImageLuminanceSourceContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 79983A5A2164CDC400E311F8 /* ZXCGImageLuminanceSourceContext.m */; };
@@ -4857,6 +4860,7 @@
 				255E492618143AC600A03A28 /* ZXEAN13Reader.h in Headers */,
 				0294D0FD190ED90B00BBACCB /* ZXBarcodeFormat.h in Headers */,
 				255E492718143AC600A03A28 /* ZXEAN13Writer.h in Headers */,
+				79738EC32165FD98000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */,
 				0294D133190ED90B00BBACCB /* ZXPlanarYUVLuminanceSource.h in Headers */,
 				255E492818143AC600A03A28 /* ZXEAN8Reader.h in Headers */,
 				255E492918143AC600A03A28 /* ZXEAN8Writer.h in Headers */,
@@ -5104,6 +5108,7 @@
 				255E48DB18143A8800A03A28 /* ZXQRCodeBitMatrixParser.h in Headers */,
 				255E48DC18143A8800A03A28 /* ZXQRCodeDataBlock.h in Headers */,
 				0294D0FE190ED90B00BBACCB /* ZXBarcodeFormat.h in Headers */,
+				79738EC42165FD99000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */,
 				255E48DD18143A8800A03A28 /* ZXQRCodeDecodedBitStreamParser.h in Headers */,
 				0294D134190ED90B00BBACCB /* ZXPlanarYUVLuminanceSource.h in Headers */,
 				255E48DE18143A8800A03A28 /* ZXQRCodeDecoder.h in Headers */,
@@ -5351,6 +5356,7 @@
 				DB7259291A5243AB00EFF81B /* ZXAztecDetectorResult.h in Headers */,
 				DB725A051A52478000EFF81B /* ZXMultiFinderPatternFinder.h in Headers */,
 				DB72598B1A52454400EFF81B /* ZXDataMatrixEncoderContext.h in Headers */,
+				79738EC52165FD99000A3AF9 /* ZXCGImageLuminanceSourceContext.h in Headers */,
 				DB7259A81A5245B000EFF81B /* ZXRSSExpandedBlockParsedResult.h in Headers */,
 				DB7259751A5244FC00EFF81B /* ZXInvertedLuminanceSource.h in Headers */,
 				DB7259471A52445B00EFF81B /* ZXTelResultParser.h in Headers */,

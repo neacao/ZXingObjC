@@ -268,6 +268,7 @@
   _left = left;
 }
 
+// R f: http://www.tannerhelland.com/3643/grayscale-image-algorithm-vb6/
 - (uint32_t)calculateRed:(uint32_t)red green:(uint32_t)green blue:(uint32_t)blue {
     if (!_sourceInfo || _sourceInfo.type == ZXCGImageLuminanceSourceNormal) {
         uint32_t ret = (306 * red + 601 * green + 117 * blue + (0x200)) >> 10; // 0x200 = 1<<9, half an lsb of the result to force rounding
@@ -276,11 +277,10 @@
     
     switch (_sourceInfo.type) {
         case ZXCGImageLuminanceSourceLuma: {
-            uint32_t result = (red * 0.2126 + green * 0.7152 + blue * 0.0722);
+            uint32_t result = (0.2126 * red + 0.7152 * green + 0.0722 * blue);
             return result;
         }
             
-            // shades formula - ref: http://www.tannerhelland.com/3643/grayscale-image-algorithm-vb6/
         case ZXCGImageLuminanceSourceShades: {
             if (_sourceInfo.numberOfShades > 1) {
                 float conversationFactor = 255.0 / (_sourceInfo.numberOfShades - 1);
