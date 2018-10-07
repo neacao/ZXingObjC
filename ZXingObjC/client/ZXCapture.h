@@ -62,7 +62,14 @@
 - (void)start;
 - (void)stop;
 
-- (void)enableHeuristicQR;
+/**
+ * This enables `ZXCapture` to try additional heuristics to decode
+ * the barcode.
+ *
+ * @see `ZXCGImageLuminanceSourceInfo`
+ * Currently: make the grayscale image darker to process
+ */
+- (void)enableHeuristic;
 
 @end
 

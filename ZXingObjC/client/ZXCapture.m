@@ -26,7 +26,7 @@
 
 #import "ZXQRCodeReader.h"
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 @interface ZXCapture () <AVCaptureMetadataOutputObjectsDelegate>
 
@@ -65,17 +65,17 @@
     _orderInSkip = 0;
     _orderOutSkip = 0;
     _captureFramesPerSec = 3.0f;
-
+    
     if (NSClassFromString(@"ZXMultiFormatReader")) {
       _reader = [NSClassFromString(@"ZXMultiFormatReader") performSelector:@selector(reader)];
     }
-
+    
     _rotation = 0.0f;
     _running = NO;
     _transform = CGAffineTransformIdentity;
     _scanRect = CGRectZero;
   }
-
+  
   return self;
 }
 
@@ -83,13 +83,13 @@
   if (_lastScannedImage) {
     CGImageRelease(_lastScannedImage);
   }
-
+  
   if (_session && _session.inputs) {
     for (AVCaptureInput *input in _session.inputs) {
       [_session removeInput:input];
     }
   }
-
+  
   if (_session && _session.outputs) {
     for (AVCaptureOutput *output in _session.outputs) {
       [_session removeOutput:output];
@@ -106,7 +106,7 @@
     layer.affineTransform = self.transform;
     layer.delegate = self;
     layer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-
+    
     _layer = layer;
   }
   return layer;
@@ -116,14 +116,14 @@
   if (!_output) {
     _output = [[AVCaptureVideoDataOutput alloc] init];
     [_output setVideoSettings:@{
-      (NSString *)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA]
-    }];
+                                (NSString *)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA]
+                                }];
     [_output setAlwaysDiscardsLateVideoFrames:YES];
     [_output setSampleBufferDelegate:self queue:_captureQueue];
-
+    
     [self.session addOutput:_output];
   }
-
+  
   return _output;
 }
 
@@ -140,7 +140,7 @@
 
 - (void)setDelegate:(id<ZXCaptureDelegate>)delegate {
   _delegate = delegate;
-
+  
   if (delegate) {
     self.hardStop = NO;
   }
@@ -150,7 +150,7 @@
 - (void)setFocusMode:(AVCaptureFocusMode)focusMode {
   if ([self.input.device isFocusModeSupported:focusMode] && self.input.device.focusMode != focusMode) {
     _focusMode = focusMode;
-
+    
     [self.input.device lockForConfiguration:nil];
     self.input.device.focusMode = focusMode;
     [self.input.device unlockForConfiguration];
@@ -161,11 +161,11 @@
   if (_lastScannedImage) {
     CGImageRelease(_lastScannedImage);
   }
-
+  
   if (lastScannedImage) {
     CGImageRetain(lastScannedImage);
   }
-
+  
   _lastScannedImage = lastScannedImage;
 }
 
@@ -183,7 +183,7 @@
 
 - (void)setTorch:(BOOL)torch {
   _torch = torch;
-
+  
   [self.input.device lockForConfiguration:nil];
   
   AVCaptureTorchMode torchMode = self.torch ? AVCaptureTorchModeOn : AVCaptureTorchModeOff;
@@ -259,7 +259,7 @@
 
 - (void)hard_stop {
   self.hardStop = YES;
-
+  
   if (self.running) {
     [self stop];
   }
@@ -274,17 +274,17 @@
   if (self.hardStop) {
     return;
   }
-
+  
   if (self.delegate || self.luminanceLayer || self.binaryLayer) {
     (void)[self output];
   }
-
+  
   if (!self.session.running) {
     static int i = 0;
     if (++i == -2) {
       abort();
     }
-
+    
     [self.session startRunning];
   }
   self.running = YES;
@@ -294,11 +294,11 @@
   if (!self.running) {
     return;
   }
-
+  
   if (self.session.running) {
     [self.session stopRunning];
   }
-
+  
   self.running = NO;
 }
 
@@ -306,11 +306,11 @@
 
 - (id<CAAction>)actionForLayer:(CALayer *)_layer forKey:(NSString *)event {
   [CATransaction setValue:[NSNumber numberWithFloat:0.0f] forKey:kCATransactionAnimationDuration];
-
+  
   if ([event isEqualToString:kCAOnOrderIn] || [event isEqualToString:kCAOnOrderOut]) {
     return self;
   }
-
+  
   return nil;
 }
 
@@ -320,7 +320,7 @@
       self.orderInSkip--;
       return;
     }
-
+    
     self.onScreen = YES;
     [self startStop];
   } else if ([key isEqualToString:kCAOnOrderOut]) {
@@ -328,7 +328,7 @@
       self.orderOutSkip--;
       return;
     }
-
+    
     self.onScreen = NO;
     [self startStop];
   }
@@ -340,7 +340,7 @@
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
   if (!self.running) return;
-
+  
   @autoreleasepool {
     if (!self.cameraIsReady) {
       self.cameraIsReady = YES;
@@ -350,7 +350,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         });
       }
     }
-
+    
     if (!self.captureToFilename && !self.luminanceLayer && !self.binaryLayer && !self.delegate) {
       return;
     }
@@ -358,21 +358,21 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     // reduce CPU usage by around 30%, reference: https://github.com/TheLevelUp/ZXingObjC/issues/314
     // Default capture 3 frames per second or customize them. if you want lower CPU usage, can adjust captureFramesPerSec to 1.0f make a better performace.
     float kMinMargin = 1.0 / _captureFramesPerSec;
-      
+    
     // Gets the timestamp for each frame.
     CMTime presentTimeStamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-      
+    
     static double curFrameTimeStamp = 0;
     static double lastFrameTimeStamp = 0;
-      
+    
     curFrameTimeStamp = (double)presentTimeStamp.value / presentTimeStamp.timescale;
-      
+    
     if (curFrameTimeStamp - lastFrameTimeStamp > kMinMargin) {
       lastFrameTimeStamp = curFrameTimeStamp;
       
       CVImageBufferRef videoFrame = CMSampleBufferGetImageBuffer(sampleBuffer);
       CGImageRef videoFrameImage = [ZXCGImageLuminanceSource createImageFromBuffer:videoFrame];
-      [self decodeImage: videoFrameImage];
+      [self decodeImage:videoFrameImage];
     }
   }
 }
@@ -385,8 +385,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         image = croppedImage;
     }
     
-    CGImageRef rotatedImage = [self createRotatedImage:image degrees:self.rotation];
-    CGImageRelease(image);
+    CGImageRef rotatedImage = [self createRotatedImage: image degrees: self.rotation];
     self.lastScannedImage = rotatedImage;
     
     if (self.captureToFilename) {
@@ -437,7 +436,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
                 });
             }
         }
-    }
+  }
 }
 
 #pragma mark - Private
@@ -449,18 +448,18 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     return original;
   } else {
     double radians = degrees * M_PI / 180;
-
+    
 #if TARGET_OS_EMBEDDED || TARGET_IPHONE_SIMULATOR
     radians = -1 * radians;
 #endif
-
+    
     size_t _width = CGImageGetWidth(original);
     size_t _height = CGImageGetHeight(original);
-
+    
     CGRect imgRect = CGRectMake(0, 0, _width, _height);
     CGAffineTransform __transform = CGAffineTransformMakeRotation(radians);
     CGRect rotatedRect = CGRectApplyAffineTransform(imgRect, __transform);
-
+    
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef context = CGBitmapContextCreate(NULL,
                                                  rotatedRect.size.width,
@@ -472,21 +471,21 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     CGContextSetAllowsAntialiasing(context, FALSE);
     CGContextSetInterpolationQuality(context, kCGInterpolationNone);
     CGColorSpaceRelease(colorSpace);
-
+    
     CGContextTranslateCTM(context,
                           +(rotatedRect.size.width/2),
                           +(rotatedRect.size.height/2));
     CGContextRotateCTM(context, radians);
-
+    
     CGContextDrawImage(context, CGRectMake(-imgRect.size.width/2,
                                            -imgRect.size.height/2,
                                            imgRect.size.width,
                                            imgRect.size.height),
                        original);
-
+    
     CGImageRef rotatedImage = CGBitmapContextCreateImage(context);
     CFRelease(context);
-
+    
     return rotatedImage;
   }
 }
@@ -495,18 +494,18 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   if (self.captureDevice) {
     return self.captureDevice;
   }
-
+  
   AVCaptureDevice *zxd = nil;
-
+  
   NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-
+  
   if ([devices count] > 0) {
     if (self.captureDeviceIndex == -1) {
       AVCaptureDevicePosition position = AVCaptureDevicePositionBack;
       if (self.camera == self.front) {
         position = AVCaptureDevicePositionFront;
       }
-
+      
       for (unsigned int i = 0; i < [devices count]; ++i) {
         AVCaptureDevice *dev = [devices objectAtIndex:i];
         if (dev.position == position) {
@@ -516,36 +515,36 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         }
       }
     }
-
+    
     if (!zxd && self.captureDeviceIndex != -1) {
       zxd = [devices objectAtIndex:self.captureDeviceIndex];
     }
   }
-
+  
   if (!zxd) {
     zxd = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
   }
-
+  
   self.captureDevice = zxd;
-
+  
   return zxd;
 }
 
 - (void)replaceInput {
   [self.session beginConfiguration];
-
+  
   if (self.session && self.input) {
     [self.session removeInput:self.input];
     self.input = nil;
   }
-
+  
   AVCaptureDevice *zxd = [self device];
-
+  
   if (zxd) {
     self.input = [AVCaptureDeviceInput deviceInputWithDevice:zxd error:nil];
     self.focusMode = self.focusMode;
   }
-
+  
   if (self.input) {
     if (!self.sessionPreset) {
       self.sessionPreset = AVCaptureSessionPreset1280x720;
@@ -553,7 +552,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     self.session.sessionPreset = self.sessionPreset;
     [self.session addInput:self.input];
   }
-
+  
   [self.session commitConfiguration];
 }
 
@@ -572,7 +571,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         (self.onScreen && (self.luminanceLayer || self.binaryLayer))))) {
          [self start];
        }
-
+  
   if (self.running && !self.delegate && !self.onScreen) {
     [self stop];
   }
@@ -588,7 +587,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     3. Using DecomposingFormula to detect too bright QR image
     4. Using concurrency queue to make the process faster
  */
-- (void)enableHeuristicQR {
+- (void)enableHeuristic {
     if (_isHeuristicQR) { return; }
     _isHeuristicQR = TRUE;
     
