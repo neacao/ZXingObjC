@@ -268,43 +268,43 @@
   _left = left;
 }
 
+// Ref: http://www.tannerhelland.com/3643/grayscale-image-algorithm-vb6/
 - (uint32_t)calculateRed:(uint32_t)red green:(uint32_t)green blue:(uint32_t)blue {
-  // Normal formula
-  if (_sourceInfo == nil || _sourceInfo.type == ZXCGImageLuminanceSourceNormal) {
-    uint32_t ret = (306 * red + 601 * green + 117 * blue + (0x200)) >> 10; // 0x200 = 1<<9, half an lsb of the result to force rounding
-    return ret;
-  }
-  
-  switch (_sourceInfo.type) {
-    case ZXCGImageLuminanceSourceLuma: {
-      uint32_t result = (red * 0.2126 + green * 0.7152 + blue * 0.0722);
-      return result;
+    // Normal formula
+    if (_sourceInfo == nil || _sourceInfo.type == ZXCGImageLuminanceSourceNormal) {
+        uint32_t ret = (306 * red + 601 * green + 117 * blue + (0x200)) >> 10; // 0x200 = 1<<9, half an lsb of the result to force rounding
+        return ret;
     }
-      
-      // shades formula - ref: http://www.tannerhelland.com/3643/grayscale-image-algorithm-vb6/
-    case ZXCGImageLuminanceSourceShades: {
-      if (_sourceInfo.numberOfShades > 1) {
-        float conversationFactor = 255.0 / (_sourceInfo.numberOfShades - 1);
-        float averageValue = (red + green + blue) / 3.0;
-        uint32_t result = ((averageValue / conversationFactor) + 0.5) * conversationFactor;
-        return result;
-      }
-      
-      return 0;
+    
+    switch (_sourceInfo.type) {
+        case ZXCGImageLuminanceSourceLuma: {
+            uint32_t result = (0.2126 * red + 0.7152 * green + 0.0722 * blue);
+            return result;
+        }
+            
+        case ZXCGImageLuminanceSourceShades: {
+            if (_sourceInfo.numberOfShades > 1) {
+                float conversationFactor = 255.0 / (_sourceInfo.numberOfShades - 1);
+                float averageValue = (red + green + blue) / 3.0;
+                uint32_t result = ((averageValue / conversationFactor) + 0.5) * conversationFactor;
+                return result;
+            }
+            
+            return 0;
+        }
+            
+        case ZXCGImageLuminanceSourceDigital:
+            return green;
+            
+        case ZXCGImageLuminanceSourceDecomposingMin:
+            return MIN(MIN(red, green), blue);
+            
+        case ZXCGImageLuminanceSourceDecomposingMax:
+            return MAX(MAX(red, green), blue);
+            
+        default:
+            return 0;
     }
-      
-    case ZXCGImageLuminanceSourceDigital:
-      return green;
-      
-    case ZXCGImageLuminanceSourceDecomposingMin:
-      return MIN(MIN(red, green), blue);
-      
-    case ZXCGImageLuminanceSourceDecomposingMax:
-      return MAX(MAX(red, green), blue);
-      
-    default:
-      return 0;
-  }
 }
 
 - (BOOL)rotateSupported {
