@@ -23,6 +23,7 @@
 #import "ZXHybridBinarizer.h"
 #import "ZXReader.h"
 #import "ZXResult.h"
+
 #import "ZXQRCodeReader.h"
 
 #define DEBUG_MODE 0
@@ -44,7 +45,7 @@
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, strong) AVCaptureSession *session;
 
-@property (nonatomic, assign) BOOL qrOptimzed;
+@property (nonatomic, assign) BOOL isHeuristicQR;
 @property (nonatomic, copy) dispatch_queue_t metadataOutputQueue;
 @property (nonatomic, copy) dispatch_queue_t parallelQueue;
 @property (nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
@@ -397,7 +398,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         self.captureToFilename = nil;
     }
     
-    if (_qrOptimzed) {
+    if (_isHeuristicQR) {
         [self decodeQRFromCGImage: rotatedImage];
         return;
     }
@@ -579,9 +580,17 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 # pragma mark - Customization
 
-- (void)optimiseForQROnly {
-    if (_qrOptimzed) { return; }
-    _qrOptimzed = TRUE;
+
+/**
+ Enable heuristic to make the detection of QR faster by:
+    1. Using native camera detection to quick detect normal QR image
+    2. Using normal formula (DIMP) of ZXing to detect QR image
+    3. Using DecomposingFormula to detect too bright QR image
+    4. Using concurrency queue to make the process faster
+ */
+- (void)enableHeuristicQR {
+    if (_isHeuristicQR) { return; }
+    _isHeuristicQR = TRUE;
     
     _metadataOutput = [[AVCaptureMetadataOutput alloc] init];
     [self.session addOutput: _metadataOutput];
@@ -592,6 +601,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     _parallelQueue = dispatch_queue_create("com.neacao.parallelQueue", DISPATCH_QUEUE_CONCURRENT);
 }
 
+
+/**
+ Create a scale image based on value input
+
+ @param image original image
+ @param scale scale value
+ @return an image that scaled
+ */
 - (CGImageRef)createScaleImage: (CGImageRef)image scale: (CGFloat)scale {
     size_t width = CGImageGetWidth(image);
     size_t height = CGImageGetHeight(image);
@@ -615,6 +632,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     return scaledImage;
 }
 
+
+/**
+ Customize decode of ZXReader to faster detect QR
+
+ @param image original image
+ */
 - (void)decodeQRFromCGImage: (CGImageRef)image {
     CGImageRef clonedImage = [self createScaleImage: image scale: 1.0];
     ZXCGImageLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage: image
@@ -633,8 +656,16 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     });
 }
 
+
+/**
+ Decode QR image from luminance Source
+ This function shall be ran under concurrency queue to make the process faster
+
+ @param source luminance source
+ @param origin determine that luminance source is created from original image or not to display binary if needed
+ */
 - (void)decodQRFromSource: (ZXCGImageLuminanceSource *)source
-                    origin: (BOOL)origin {
+                   origin: (BOOL)origin {
     
     ZXHybridBinarizer *binarizer = [[ZXHybridBinarizer alloc] initWithSource: source];
     ZXBinaryBitmap *bitmap = [[ZXBinaryBitmap alloc] initWithBinarizer:binarizer];
